@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Galeri Karya - telUArc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/galleryPage.css') }}">
+    <style>
+        /* Custom CSS untuk galeri karya */
+        :root {
+            --primary-red: #e53e3e;
+            --primary-red-dark: #c53030;
+            --primary-red-light: #feb2b2;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Header Styles */
+        .header-gradient {
+            background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            box-shadow: 0 4px 20px rgba(229, 62, 62, 0.3);
+        }
+        
+        .red-text {
+            background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        
+        .red-bg {
+            background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .red-bg:hover {
+            background: linear-gradient(90deg, var(--primary-red-dark) 0%, #9b1c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(229, 62, 62, 0.3);
+        }
+        
+        /* Gallery Styles */
+        .masonry-grid {
+            column-count: 4;
+            column-gap: 1.5rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .masonry-grid {
+                column-count: 3;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .masonry-grid {
+                column-count: 2;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .masonry-grid {
+                column-count: 1;
+            }
+        }
+        
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .artwork-card {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .artwork-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .artwork-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 60%);
+            display: flex;
+            align-items: flex-end;
+            padding: 15px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .artwork-card:hover .artwork-overlay {
+            opacity: 1;
+        }
+        
+        .artwork-actions {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .action-button {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .action-button:hover {
+            background: white;
+            transform: scale(1.1);
+            color: var(--primary-red);
+        }
+        
+        .bookmarked i {
+            color: var(--primary-red);
+        }
+        
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .filter-chip {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .filter-chip:hover {
+            background: #e9ecef;
+        }
+        
+        .filter-chip.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 3rem;
+        }
+        
+        .pagination button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            background: white;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination button:hover {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .pagination button.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination button:disabled:hover {
+            background: white;
+            color: #495057;
+            border-color: #e9ecef;
+        }
+        
+        /* Search Bar Styles */
+        .search-bar {
+            position: relative;
+            flex-grow: 1;
+            max-width: 600px;
+        }
+        
+        .search-bar input {
+            width: 100%;
+            padding: 10px 20px 10px 45px;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-bar input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+        
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Profile Menu */
+        .profile-menu {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform-origin: top right;
+            transition: all 0.2s ease;
+        }
+        
+        .profile-menu a {
+            padding: 12px 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .profile-menu a:hover {
+            background: #f8fafc;
+            color: var(--primary-red);
+        }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(229, 62, 62, 0.4);
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 15px 35px rgba(229, 62, 62, 0.5);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #cbd5e0;
+            margin-bottom: 20px;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="header-gradient text-white sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                        <i class="fas fa-palette text-red-600 text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold">telUArc</h1>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Cari karya, seniman, atau tag...">
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button onclick="openUploadModal()" class="bg-white text-red-600 px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-50 transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Upload Karya
+                    </button>
+                    
+                    <div class="relative">
+                        @auth
+                            <button onclick="toggleProfileMenu()" class="w-8 h-8 rounded-full overflow-hidden ring-2 ring-gray-200 hover:ring-red-400 transition-all">
+                                @if(Auth::user()->avatar)
+                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Profile">
+                                @else
+                                    <img src="https://i.pravatar.cc/100" alt="Profile">
+                                @endif
+                            </button>
+
+                            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-48 profile-menu py-2">
+                                <a href="{{ route('users.show', auth()->user()->id) }}" class="block px-4 py-2 text-sm hover:bg-gray-50 text-black">
+                                    <i class="fas fa-user mr-2"></i> My Profile
+                                </a>
+
+                                <a href="#" onclick="openReportModal()" class="block px-4 py-2 text-sm hover:bg-gray-50 text-black">
+                                    <i class="fas fa-flag mr-2"></i> Report
+                                </a>
+
+                                <hr class="my-1">
+
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="block px-4 py-2 text-sm hover:bg-gray-50 text-black">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                    </button>
+                                </form>
+                            </div>
+                        @endauth
+
+                        @guest
+                            <form action="{{ route('auth.form') }}" method="GET">
+                                @csrf
+                                <button class="bg-white text-red-600 px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-50 transition-colors" type="submit">
+                                    <i class="fas fa-sign-in-alt mr-2"></i> Login
+                                </button>
+                            </form>
+                        @endguest
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-16 bg-gradient-to-r from-red-500 to-red-600 text-white">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Galeri Karya Digital</h1>
+            <p class="text-xl max-w-2xl mx-auto mb-8">Jelajahi ribuan karya seni digital dari seniman berbakat di seluruh dunia</p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <button class="bg-white text-red-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors flex items-center">
+                    <i class="fas fa-filter mr-2"></i> Filter Karya
+                </button>
+                <button class="bg-transparent px-6 py-3 rounded-full font-medium border-2 border-white hover:bg-white hover:text-red-600 transition-colors flex items-center">
+                    <i class="fas fa-sort mr-2"></i> Urutkan
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section class="py-6 bg-white shadow-sm">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="filter-section">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-filter text-gray-500"></i>
+                        <span class="font-medium text-gray-700">Filter:</span>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <button class="filter-chip active">Semua Karya</button>
+                        <button class="filter-chip">Ilustrasi</button>
+                        <button class="filter-chip">Digital Painting</button>
+                        <button class="filter-chip">3D Art</button>
+                        <button class="filter-chip">Fotografi</button>
+                        <button class="filter-chip">Konsep Seni</button>
+                        <button class="filter-chip">Animasi</button>
+                    </div>
+                    
+                    <div class="ml-auto flex items-center space-x-2">
+                        <i class="fas fa-sort text-gray-500"></i>
+                        <select class="form-input py-2 px-4">
+                            <option>Terbaru</option>
+                            <option>Terpopuler</option>
+                            <option>Paling Banyak Disukai</option>
+                            <option>Paling Banyak Dilihat</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="py-12">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Semua Karya <span class="text-gray-500 text-lg font-normal">({{ count($artworks) }} karya)</span></h2>
+                <div class="flex space-x-2">
+                    <button class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center hover:bg-gray-50">
+                        <i class="fas fa-th text-gray-600"></i>
+                    </button>
+                    <button class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center hover:bg-gray-50">
+                        <i class="fas fa-list text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="masonry-grid">
+                @foreach($artworks as $artwork)
+                    <div class="masonry-item fade-in">
+                        <div class="artwork-card"
+                            data-artwork-id="{{ $artwork->id }}"
+                            onclick="openArtworkPopup('{{ $artwork->id }}')">
+                            <div class="relative">
+                                <img src="{{ asset('storage/'.$artwork->main_image) }}" 
+                                    alt="{{ $artwork->title }}" class="w-full">
+                                <div class="artwork-overlay">
+                                    <div class="artwork-actions">
+                                        <button class="action-button" onclick="toggleBookmark(event, '{{ $artwork->id }}')" data-artwork-id="{{ $artwork->id }}">
+                                            <i class="{{ in_array($artwork->id, $bookmarkedArtworks ?? []) ? 'fas' : 'far' }} fa-bookmark"></i>
+                                        </button>
+                                        <button onclick="event.stopPropagation()" class="action-button">
+                                            <i class="far fa-comment"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-bold text-lg mb-1">{{ $artwork->title }}</h3>
+                                <div class="flex items-center justify-between text-sm text-gray-600">
+                                    <div class="flex items-center">
+                                        <img src="https://picsum.photos/seed/{{ $artwork->user->id }}/24/24" alt="Artist" class="w-6 h-6 rounded-full mr-2">
+                                        <span>{{ $artwork->user->name ?? 'Anonim' }}</span>
+                                    </div>
+                                    <span>{{ $artwork->created_at->diffForHumans() }}</span>
+                                </div>
+                                <div class="flex items-center mt-3 text-sm text-gray-500">
+                                    <div class="flex items-center mr-4">
+                                        <i class="far fa-heart mr-1"></i>
+                                        <span>{{ rand(10, 200) }}</span>
+                                    </div>
+                                    <div class="flex items-center mr-4">
+                                        <i class="far fa-eye mr-1"></i>
+                                        <span>{{ rand(100, 1000) }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="far fa-comment mr-1"></i>
+                                        <span>{{ rand(0, 50) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="prev" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>4</button>
+                <button>5</button>
+                <button>...</button>
+                <button>12</button>
+                <button class="next">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-16 pb-8 mt-16">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <!-- Logo dan Deskripsi -->
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                            <i class="fas fa-palette text-red-600 text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">telUArc</h2>
+                    </div>
+                    <p class="text-gray-400 mb-6 max-w-md">
+                        Platform untuk menjelajahi dan berbagi karya seni digital dari seniman berbakat di seluruh dunia.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="https://facebook.com/telUArc" target="_blank" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://twitter.com/telUArc" target="_blank" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://instagram.com/telUArc" target="_blank" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://youtube.com/telUArc" target="_blank" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition-colors">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Link Cepat -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Link Cepat</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Beranda</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Galeri Karya</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Seniman Populer</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Kategori</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Tentang Kami</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Bantuan -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Bantuan</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Ketentuan Layanan</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Kebijakan Privasi</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Hubungi Kami</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Karir</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Copyright -->
+            <div class="pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+                <p>&copy; {{ date('Y') }} telUArc. Hak Cipta Dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="openUploadModal()">
+        <i class="fas fa-plus text-xl"></i>
+    </button>
+
+    <!-- Artwork Popup -->
+    <div id="artworkPopup" class="artwork-popup">
+        <div class="popup-content">
+            <button onclick="closeArtworkPopup()" class="absolute top-6 right-6 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 z-10 transition-all">
+                <i class="fas fa-times text-gray-600 text-xl"></i>
+            </button>
+            
+            <div class="p-8">
+                <!-- Artwork Header -->
+                <div class="mb-6">
+                    <h2 id="popupTitle" class="text-3xl font-bold mb-2"></h2>
+                    <div class="flex items-center space-x-4 text-gray-600">
+                        <div class="flex items-center space-x-3">
+                            <img id="popupArtistAvatar" src="" alt="Artist" class="w-10 h-10 rounded-full">
+                            <div>
+                                <div id="popupArtist" class="font-medium"></div>
+                                <div class="text-sm text-gray-500">Seniman</div>
+                            </div>
+                        </div>
+                        <span id="popupTime" class="text-sm"></span>
+                    </div>
+                </div>
+                
+                <!-- Image Gallery -->
+                <div class="image-gallery mb-8">
+                    <!-- Main Image Container -->
+                    <div class="main-image-container">
+                        <img id="popupMainImage" src="" alt="Artwork" class="main-image">
+                    </div>
+                    
+                    <!-- Thumbnail Grid -->
+                    <div class="thumbnail-grid" id="thumbnailGrid">
+                        <!-- Thumbnails will be dynamically inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Description Section -->
+                <div class="mb-8">
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fas fa-align-left mr-3 text-red-500"></i> Deskripsi Karya
+                        </h3>
+                        <p id="popupDescription" class="text-gray-700 leading-relaxed text-lg"></p>
+                    </div>
+                </div>
+                
+                <!-- Tags Section -->
+                <div class="mb-8" id="popupTagsContainer">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-tags mr-3 text-red-500"></i> Tags
+                    </h3>
+                    <div id="popupTags" class="flex flex-wrap gap-2"></div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-between pt-6 border-t">
+                    <div class="flex space-x-4">
+                        <button id="popupBookmarkBtn" onclick="toggleBookmark(event, currentArtworkId)" class="flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <i class="far fa-bookmark text-gray-600"></i>
+                            <span class="text-sm font-medium">Bookmark</span>
+                        </button>
+                        <button onclick="openCommentsModal(event)" class="flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <i class="far fa-comment text-gray-600"></i>
+                            <span class="text-sm font-medium">Komentar</span>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-6 text-gray-600">
+                        <div class="flex items-center space-x-2">
+                            <i class="far fa-comment text-xl"></i>
+                            <span id="popupComments" class="font-medium">0</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="far fa-eye text-xl"></i>
+                            <span id="popupViews" class="font-medium">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border-0 overflow-hidden transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] flex flex-col modal-content" id="uploadModalContent">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white flex-shrink-0">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-cloud-upload-alt mr-3"></i> Upload Karya
+                    </h2>
+                    <button onclick="closeUploadModal()" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form action="{{ route('artworks.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto flex-grow">
+                @csrf
+                
+                <!-- Main Image Upload -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Gambar Utama</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer" id="mainImageContainer">
+                        <div id="mainImagePreview" class="hidden mb-4">
+                            <img src="" alt="Preview" class="max-h-48 mx-auto rounded-lg shadow-md">
+                        </div>
+                        <div id="mainImagePlaceholder">
+                            <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 mb-2">Klik atau seret gambar ke sini</p>
+                            <p class="text-gray-500 text-sm">PNG, JPG, JPEG hingga 2MB</p>
+                        </div>
+                        <input type="file" name="main_image" accept="image/*" required class="hidden" id="mainImageInput">
+                    </div>
+                </div>
+
+                <!-- Title Input -->
+                <div class="mb-5">
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Judul Karya</label>
+                    <div class="relative">
+                        <input type="text" name="title" id="title" class="w-full form-input" placeholder="Berikan judul untuk karya Anda" required>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <i class="fas fa-heading text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Textarea -->
+                <div class="mb-5">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
+                    <div class="relative">
+                        <textarea name="description" id="description" class="w-full form-input" rows="4" placeholder="Ceritakan tentang karya Anda..."></textarea>
+                        <div class="absolute top-3 right-3 pointer-events-none">
+                            <i class="fas fa-align-left text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Images -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Gambar Tambahan (Opsional)</label>
+                    <div class="border border-gray-300 rounded-xl p-4 bg-gray-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-600">Tambahkan gambar opsional</span>
+                            <label for="additionalImagesInput" class="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm transition-colors">
+                                <i class="fas fa-plus mr-1"></i> Tambah
+                            </label>
+                            <input type="file" name="additional_images[]" multiple accept="image/*" id="additionalImagesInput" class="hidden">
+                        </div>
+                        <div id="additionalImagesPreview" class="grid grid-cols-3 gap-2">
+                            <!-- Preview images will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeUploadModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn-primary flex items-center">
+                        <i class="fas fa-upload mr-2"></i> Upload Karya
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-backdrop">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md border-0 modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Laporkan Masalah</h2>
+                <button onclick="closeReportModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleReport(event)">
+                <div class="mb-4">
+                    <select class="w-full form-input">
+                        <option>Pilih jenis laporan</option>
+                        <option>Spam</option>
+                        <option>Konten tidak pantas</option>
+                        <option>Pelanggaran hak cipta</option>
+                        <option>Lainnya</option>
+                    </select>
+                </div>
+                <div class="mb-5">
+                    <textarea class="w-full form-input" rows="4" placeholder="Jelaskan masalah yang Anda temukan..."></textarea>
+                </div>
+                <button type="submit" class="w-full btn-primary">
+                    Kirim Laporan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Comments Modal -->
+    <div id="commentsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-backdrop">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-lg border-0 modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Komentar</h2>
+                <button onclick="closeCommentsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-5">
+                <img src="https://picsum.photos/seed/art1/500/300" alt="Artwork" class="w-full rounded-xl shadow-md">
+            </div>
+            
+            <div class="space-y-4 mb-5 max-h-80 overflow-y-auto pr-2">
+                <div class="flex space-x-3">
+                    <img src="https://picsum.photos/seed/user2/40/40" alt="User" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="font-medium">Altap</p>
+                            <p class="mt-1">Bagus sekali! Saya suka sekali dengan detail dan warna yang digunakan.</p>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                            <span>2 jam yang lalu</span>
+                            <button class="hover:text-red-600">
+                                <i class="far fa-heart"></i> 5
+                            </button>
+                            <button class="hover:text-blue-600">
+                                <i class="far fa-comment"></i> Balas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <img src="https://picsum.photos/seed/user3/40/40" alt="User" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <p class="font-medium">Rara</p>
+                            <p class="mt-1">Suka! Karya ini sangat inspiratif.</p>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                            <span>1 jam yang lalu</span>
+                            <button class="hover:text-red-600">
+                                <i class="far fa-heart"></i> 3
+                            </button>
+                            <button class="hover:text-blue-600">
+                                <i class="far fa-comment"></i> Balas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3">
+                <img src="https://picsum.photos/seed/user1/40/40" alt="User" class="w-10 h-10 rounded-full">
+                <div class="flex-1 relative">
+                    <input type="text" placeholder="Tulis komentar..." class="w-full form-input pr-12">
+                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500 hover:text-red-700">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =======================
+        // Global Variables
+        // =======================
+        let bookmarks = JSON.parse(localStorage.getItem('bookmarks')) || [];
+        let currentArtworkId = null;
+
+        // =======================
+        // Filter Functionality
+        // =======================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter chips
+            const filterChips = document.querySelectorAll('.filter-chip');
+            filterChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    filterChips.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Here you would typically filter the artworks based on the selected category
+                    // For demo purposes, we'll just log the selected filter
+                    console.log('Filter selected:', this.textContent);
+                });
+            });
+            
+            // Sort dropdown
+            const sortSelect = document.querySelector('.filter-section select');
+            sortSelect.addEventListener('change', function() {
+                // Here you would typically sort the artworks based on the selected option
+                console.log('Sort by:', this.value);
+            });
+        });
+
+        // =======================
+        // Pagination
+        // =======================
+        document.addEventListener('DOMContentLoaded', function() {
+            const paginationButtons = document.querySelectorAll('.pagination button:not(.prev):not(.next)');
+            const prevButton = document.querySelector('.pagination .prev');
+            const nextButton = document.querySelector('.pagination .next');
+            
+            paginationButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    paginationButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update prev/next button states
+                    const currentPage = parseInt(this.textContent);
+                    prevButton.disabled = currentPage === 1;
+                    nextButton.disabled = currentPage === 12;
+                    
+                    // Here you would typically load the artworks for the selected page
+                    console.log('Page selected:', currentPage);
+                });
+            });
+        });
+
+        // =======================
+        // Fetch Artwork View (Backend)
+        // =======================
+        async function fetchArtworkView(artworkId) {
+            try {
+                const response = await fetch(`/artworks/${artworkId}/view`);
+                if (!response.ok) throw new Error('Gagal ambil data');
+                return await response.json();
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan saat memuat karya.');
+            }
+        }
+
+        // =======================
+        // Artwork Popup
+        // =======================
+        async function openArtworkPopup(artworkId) {
+            currentArtworkId = artworkId;
+
+            const data = await fetchArtworkView(artworkId);
+            if (!data) return;
+
+            // Set popup content
+            document.getElementById('popupTitle').textContent = data.title;
+            document.getElementById('popupArtist').textContent = data.user.name;
+            document.getElementById('popupTime').textContent = data.created_at;
+            document.getElementById('popupArtistAvatar').src = data.user.avatar;
+            document.getElementById('popupDescription').textContent = data.description || 'Tidak ada deskripsi';
+            
+            // Set main image
+            const mainImage = document.getElementById('popupMainImage');
+            mainImage.src = data.main_image;
+            
+            // Set thumbnails dynamically
+            const thumbnailGrid = document.getElementById('thumbnailGrid');
+            thumbnailGrid.innerHTML = '';
+            
+            // Create thumbnail for main image
+            const mainThumbnail = createThumbnail(data.main_image, 0);
+            mainThumbnail.classList.add('active');
+            thumbnailGrid.appendChild(mainThumbnail);
+            
+            // Create thumbnails for additional images
+            if (data.additional_images && data.additional_images.length > 0) {
+                data.additional_images.forEach((imageSrc, index) => {
+                    const thumbnail = createThumbnail(imageSrc, index + 1);
+                    thumbnailGrid.appendChild(thumbnail);
+                });
+            }
+            
+            // Set tags
+            const tagsContainer = document.getElementById('popupTags');
+            tagsContainer.innerHTML = '';
+            if (data.tags && data.tags.length > 0) {
+                document.getElementById('popupTagsContainer').style.display = 'block';
+                data.tags.forEach(tag => {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tag';
+                    tagElement.textContent = `#${tag}`;
+                    tagsContainer.appendChild(tagElement);
+                });
+            } else {
+                document.getElementById('popupTagsContainer').style.display = 'none';
+            }
+            
+            // Set stats
+            document.getElementById('popupComments').textContent = data.comments;
+            document.getElementById('popupViews').textContent = data.views;
+
+            // Set bookmark state
+            const bookmarkBtn = document.getElementById('popupBookmarkBtn');
+            const bookmarkIcon = bookmarkBtn.querySelector('i');
+            if (bookmarks.includes(artworkId)) {
+                bookmarkIcon.classList.remove('far');
+                bookmarkIcon.classList.add('fas');
+                bookmarkBtn.classList.add('bookmarked');
+            } else {
+                bookmarkIcon.classList.remove('fas');
+                bookmarkIcon.classList.add('far');
+                bookmarkBtn.classList.remove('bookmarked');
+            }
+
+            // Show popup
+            document.getElementById('artworkPopup').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Function to create thumbnail
+        function createThumbnail(src, index) {
+            const thumbnail = document.createElement('img');
+            thumbnail.src = src;
+            thumbnail.alt = `Thumbnail ${index}`;
+            thumbnail.className = 'thumbnail';
+            thumbnail.dataset.index = index;
+            
+            thumbnail.onclick = function() {
+                changeMainImage(this.src);
+                // Update active state
+                document.querySelectorAll('.thumbnail').forEach(thumb => {
+                    thumb.classList.remove('active');
+                });
+                this.classList.add('active');
+            };
+            
+            return thumbnail;
+        }
+
+        function closeArtworkPopup() {
+            document.getElementById('artworkPopup').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            currentArtworkId = null;
+        }
+
+        // =======================
+        // Change Main Image in Popup
+        // =======================
+        function changeMainImage(src) {
+            const mainImage = document.getElementById('popupMainImage');
+            
+            // Add fade effect
+            mainImage.style.opacity = '0.5';
+            
+            // Change image source
+            mainImage.src = src;
+            
+            // Restore opacity after image loads
+            mainImage.onload = function() {
+                mainImage.style.opacity = '1';
+            };
+            
+            // Fallback if image fails to load
+            mainImage.onerror = function() {
+                mainImage.style.opacity = '1';
+                mainImage.src = 'https://via.placeholder.com/600x400?text=Image+Not+Available';
+            };
+        }
+
+        // =======================
+        // Bookmark
+        // =======================
+        async function toggleBookmark(event, artworkId) {
+            event.stopPropagation();
+
+            const card = document.querySelector(`[data-artwork-id="${artworkId}"]`);
+            const icon = card.querySelector(".action-button i");
+            const button = card.querySelector(".action-button");
+            const isBookmarked = icon.classList.contains("fas");
+
+            try {
+                if (isBookmarked) {
+                    // Hapus bookmark
+                    const res = await fetch(`/bookmarks/${artworkId}`, {
+                        method: "DELETE",
+                        headers: {
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                            "Accept": "application/json",
+                        },
+                    });
+
+                    if (res.ok) {
+                        icon.classList.remove("fas");
+                        icon.classList.add("far");
+                        button.classList.remove("bookmarked");
+                    } else {
+                        console.error("Gagal hapus bookmark:", await res.json());
+                    }
+
+                } else {
+                    // Tambah bookmark
+                    const res = await fetch(`/bookmarks`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                        },
+                        body: JSON.stringify({ artwork_id: artworkId }),
+                    });
+
+                    if (res.ok) {
+                        icon.classList.remove("far");
+                        icon.classList.add("fas");
+                        button.classList.add("bookmarked");
+                    } else {
+                        console.error("Gagal tambah bookmark:", await res.json());
+                    }
+                }
+            } catch (err) {
+                console.error("Error toggle bookmark:", err);
+                alert("Terjadi kesalahan saat menyimpan bookmark.");
+            }
+        }
+
+        // Inisialisasi: tandai bookmark yang sudah ada di DB saat halaman pertama load
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const res = await fetch("/bookmarks", {
+                    headers: { "Accept": "application/json" }
+                });
+                if (!res.ok) return;
+                const bookmarkedIds = await res.json(); // hasil array [1,2,3,...]
+
+                bookmarkedIds.forEach(id => {
+                    const card = document.querySelector(`[data-artwork-id="${id}"]`);
+                    if (card) {
+                        const icon = card.querySelector(".action-button i");
+                        const button = card.querySelector(".action-button");
+                        icon.classList.remove("far");
+                        icon.classList.add("fas");
+                        button.classList.add("bookmarked");
+                    }
+                });
+            } catch (err) {
+                console.error("Gagal memuat data bookmark:", err);
+            }
+        });
+
+        // =======================
+        // Modals: Upload, Profile, Report, Comments
+        // =======================
+        function openUploadModal() { 
+            const modal = document.getElementById('uploadModal');
+            const modalContent = document.getElementById('uploadModalContent');
+            
+            modal.classList.remove('hidden');
+            
+            // Add animation
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeUploadModal() { 
+            const modal = document.getElementById('uploadModal');
+            const modalContent = document.getElementById('uploadModalContent');
+            
+            // Add animation
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Reset form
+                document.querySelector('#uploadModal form').reset();
+                document.getElementById('mainImagePreview').classList.add('hidden');
+                document.getElementById('mainImagePlaceholder').classList.remove('hidden');
+                document.getElementById('additionalImagesPreview').innerHTML = '';
+            }, 300);
+        }
+
+        // Handle main image upload
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainImageContainer = document.getElementById('mainImageContainer');
+            const mainImageInput = document.getElementById('mainImageInput');
+            const mainImagePreview = document.getElementById('mainImagePreview');
+            const mainImagePlaceholder = document.getElementById('mainImagePlaceholder');
+            const additionalImagesInput = document.getElementById('additionalImagesInput');
+            const additionalImagesPreview = document.getElementById('additionalImagesPreview');
+            
+            // Click to upload main image
+            mainImageContainer.addEventListener('click', function() {
+                mainImageInput.click();
+            });
+            
+            // Preview main image
+            mainImageInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        mainImagePreview.querySelector('img').src = e.target.result;
+                        mainImagePreview.classList.remove('hidden');
+                        mainImagePlaceholder.classList.add('hidden');
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            // Preview additional images
+            additionalImagesInput.addEventListener('change', function() {
+                additionalImagesPreview.innerHTML = '';
+                
+                if (this.files) {
+                    // Limit to 5 files
+                    const files = Array.from(this.files).slice(0, 5);
+                    
+                    files.forEach((file, index) => {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            const imageContainer = document.createElement('div');
+                            imageContainer.className = 'relative group';
+                            
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'w-full h-20 object-cover rounded-lg';
+                            
+                            const removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity';
+                            removeBtn.innerHTML = '<i class="fas fa-times text-xs"></i>';
+                            removeBtn.onclick = function() {
+                                imageContainer.remove();
+                            };
+                            
+                            imageContainer.appendChild(img);
+                            imageContainer.appendChild(removeBtn);
+                            additionalImagesPreview.appendChild(imageContainer);
+                        }
+                        
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+            
+            // Drag and drop for main image
+            mainImageContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('border-red-500', 'bg-red-50');
+            });
+            
+            mainImageContainer.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('border-red-500', 'bg-red-50');
+            });
+            
+            mainImageContainer.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('border-red-500', 'bg-red-50');
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    mainImageInput.files = e.dataTransfer.files;
+                    
+                    const event = new Event('change', { bubbles: true });
+                    mainImageInput.dispatchEvent(event);
+                }
+            });
+        });
+
+        function openReportModal() { 
+            document.getElementById('reportModal').classList.remove('hidden'); 
+            document.getElementById('profileMenu').classList.add('hidden');
+        }
+
+        function closeReportModal() { 
+            document.getElementById('reportModal').classList.add('hidden'); 
+        }
+
+        function handleReport(event) { 
+            event.preventDefault(); 
+            alert('Laporan berhasil dikirim!'); 
+            closeReportModal(); 
+        }
+
+        function openCommentsModal(event) { 
+            if(event) event.stopPropagation(); 
+            document.getElementById('commentsModal').classList.remove('hidden'); 
+        }
+
+        function closeCommentsModal() { 
+            document.getElementById('commentsModal').classList.add('hidden'); 
+        }
+
+        // =======================
+        // Profile Menu Toggle
+        // =======================
+        function toggleProfileMenu() {
+            document.getElementById('profileMenu').classList.toggle('hidden');
+        }
+
+        // =======================
+        // Close Modals on Click Outside
+        // =======================
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-backdrop')) {
+                event.target.classList.add('hidden');
+            }
+            if (event.target.id === 'artworkPopup') {
+                closeArtworkPopup();
+            }
+        }
+
+        // =======================
+        // Close Popup with Escape Key
+        // =======================
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeArtworkPopup();
+            }
+        });
+    </script>
+</body>
+</html>

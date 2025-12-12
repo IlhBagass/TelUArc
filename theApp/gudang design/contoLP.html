@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>telUArc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .masonry-grid {
+            column-count: 4;
+            column-gap: 1rem;
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 1024px) {
+            .masonry-grid { column-count: 3; }
+        }
+        @media (max-width: 768px) {
+            .masonry-grid { column-count: 2; }
+        }
+        @media (max-width: 480px) {
+            .masonry-grid { column-count: 1; }
+        }
+        .section-hidden {
+            display: none;
+        }
+        .red-text {
+            color: #DC2626;
+        }
+        .red-bg {
+            background-color: #DC2626;
+        }
+        .red-border {
+            border-color: #DC2626;
+        }
+        .artwork-card {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .artwork-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .artwork-card:hover .artwork-overlay {
+            opacity: 1;
+        }
+        .artwork-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        .action-button.bookmarked {
+            background: #DC2626;
+            color: white;
+        }
+        .artwork-info {
+            padding: 0.75rem;
+        }
+        .artwork-card:hover .artwork-info {
+            background: #f9fafb;
+        }
+        .empty-bookmarks {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        .empty-bookmarks i {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+        .artwork-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .artwork-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .popup-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        .artwork-popup.active .popup-content {
+            transform: scale(1);
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+        }
+        .main-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .side-images {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .side-image {
+            width: 100%;
+            height: 190px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .side-image:hover {
+            transform: scale(1.05);
+        }
+        @media (max-width: 768px) {
+            .image-gallery {
+                grid-template-columns: 1fr;
+            }
+            .side-images {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            .side-image {
+                min-width: 150px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-14">
+                <h1 class="text-xl font-bold red-text">telUArc</h1>
+                
+                <nav class="hidden md:flex space-x-6">
+                    <button onclick="showSection('gallery')" class="nav-link red-text font-medium">Beranda</button>
+                    <button onclick="showSection('comments')" class="nav-link text-gray-600 hover:text-red-600">Komentar</button>
+                    <button onclick="showSection('bookmarks')" class="nav-link text-gray-600 hover:text-red-600">
+                        <i class="far fa-bookmark mr-1"></i> Bookmark
+                    </button>
+                </nav>
+                
+                <div class="flex items-center space-x-3">
+                    <button onclick="openUploadModal()" class="red-bg text-white px-3 py-1.5 rounded text-sm">
+                        <i class="fas fa-plus mr-1"></i> Upload
+                    </button>
+                    
+                    <div class="relative">
+                        <button onclick="toggleProfileMenu()" class="w-8 h-8 rounded-full overflow-hidden">
+                            <img src="https://picsum.photos/seed/user1/32/32" alt="Profile">
+                        </button>
+                        
+                        <div id="profileMenu" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg py-1">
+                            <a href="#" onclick="openEditProfileModal()" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-user mr-2"></i> Edit Profil
+                            </a>
+                            <a href="#" onclick="openReportModal()" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-flag mr-2"></i> Report
+                            </a>
+                            <hr class="my-1">
+                            <a href="#" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Gallery Section -->
+    <section id="gallerySection" class="section-content">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <div class="masonry-grid">
+                <!-- Artwork Items -->
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="1" onclick="openArtworkPopup(1)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art1/300/400" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 1)" class="action-button">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 1)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Sunset Dreams</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Bagas</span>
+                                <span>2 jam</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="2" onclick="openArtworkPopup(2)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art2/300/350" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 2)" class="action-button">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 2)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="fas fa-heart red-text"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Digital Landscape</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Altap</span>
+                                <span>5 jam</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="3" onclick="openArtworkPopup(3)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art3/300/450" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 3)" class="action-button bookmarked">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 3)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Abstract Emotions</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Gyebran</span>
+                                <span>1 hari</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="4" onclick="openArtworkPopup(4)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art4/300/380" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 4)" class="action-button">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 4)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Urban Sketches</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Rara</span>
+                                <span>2 hari</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="5" onclick="openArtworkPopup(5)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art5/300/420" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 5)" class="action-button">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 5)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Nature's Beauty</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Vanes</span>
+                                <span>3 hari</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="6" onclick="openArtworkPopup(6)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art6/300/360" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 6)" class="action-button bookmarked">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 6)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">City Lights</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Bagas</span>
+                                <span>4 hari</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="7" onclick="openArtworkPopup(7)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art7/300/390" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 7)" class="action-button">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 7)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="fas fa-heart red-text"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Ocean Waves</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Altap</span>
+                                <span>5 hari</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item">
+                    <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="8" onclick="openArtworkPopup(8)">
+                        <div class="relative">
+                            <img src="https://picsum.photos/seed/art8/300/440" alt="Artwork" class="w-full">
+                            <div class="artwork-overlay">
+                                <div class="artwork-actions">
+                                    <button onclick="toggleBookmark(event, this, 8)" class="action-button">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                    <button onclick="openCommentsModal(event, 8)" class="action-button">
+                                        <i class="far fa-comment"></i>
+                                    </button>
+                                    <button class="action-button">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artwork-info">
+                            <h3 class="font-medium text-sm mb-1">Mountain View</h3>
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span>Gyebran</span>
+                                <span>1 minggu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comments Section -->
+    <section id="commentsSection" class="section-content section-hidden">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <h2 class="text-lg font-semibold mb-4">Komentar</h2>
+            
+            <!-- Filter -->
+            <div class="flex items-center space-x-4 mb-6 text-sm">
+                <select class="border border-gray-300 rounded px-2 py-1">
+                    <option>Semua</option>
+                    <option>Komentar Saya</option>
+                </select>
+                <input type="text" placeholder="Cari..." class="border border-gray-300 rounded px-2 py-1 flex-1 max-w-xs">
+            </div>
+
+            <!-- Comments List -->
+            <div class="space-y-4">
+                <div class="border border-gray-200 rounded p-4">
+                    <div class="flex space-x-3">
+                        <img src="https://picsum.photos/seed/art1/100/100" alt="Artwork" class="w-20 h-20 rounded object-cover">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h3 class="font-medium text-sm">Sunset Dreams</h3>
+                                    <p class="text-xs text-gray-600">Bagas • 2 jam</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <div class="flex space-x-2">
+                                    <img src="https://picsum.photos/seed/user2/32/32" alt="User" class="w-8 h-8 rounded-full">
+                                    <div class="flex-1">
+                                        <div class="bg-gray-50 rounded p-2">
+                                            <p class="text-sm font-medium">Altap</p>
+                                            <p class="text-sm">Bagus sekali!</p>
+                                        </div>
+                                        <div class="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                                            <span>2 jam</span>
+                                            <button class="hover:text-red-600">
+                                                <i class="far fa-heart"></i> 5
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex items-center space-x-2">
+                                <img src="https://picsum.photos/seed/user1/32/32" alt="User" class="w-8 h-8 rounded-full">
+                                <input type="text" placeholder="Balas..." class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm">
+                                <button class="red-bg text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bookmarks Section -->
+    <section id="bookmarksSection" class="section-content section-hidden">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold">
+                    <i class="far fa-bookmark mr-2"></i> Bookmark Saya
+                </h2>
+                <button onclick="clearAllBookmarks()" class="text-sm text-red-600 hover:text-red-700">
+                    <i class="fas fa-trash mr-1"></i> Hapus Semua
+                </button>
+            </div>
+
+            <div id="bookmarksContainer" class="masonry-grid">
+                <!-- Bookmarked items will be dynamically inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyBookmarks" class="empty-bookmarks hidden">
+                <i class="far fa-bookmark"></i>
+                <h3 class="text-lg font-medium text-gray-600 mb-2">Belum ada bookmark</h3>
+                <p class="text-gray-500">Klik ikon bookmark pada karya untuk menyimpannya di sini</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Artwork Popup -->
+    <div id="artworkPopup" class="artwork-popup">
+        <div class="popup-content">
+            <button onclick="closeArtworkPopup()" class="absolute top-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 z-10">
+                <i class="fas fa-times text-gray-600"></i>
+            </button>
+            
+            <div class="p-6">
+                <!-- Image Gallery -->
+                <div class="image-gallery mb-6">
+                    <div>
+                        <img id="popupMainImage" src="" alt="Artwork" class="main-image">
+                    </div>
+                    <div class="side-images">
+                        <img id="popupSideImage1" src="" alt="Artwork" class="side-image" onclick="changeMainImage(this.src)">
+                        <img id="popupSideImage2" src="" alt="Artwork" class="side-image" onclick="changeMainImage(this.src)">
+                    </div>
+                </div>
+                
+                <!-- Artwork Info -->
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 id="popupTitle" class="text-2xl font-bold mb-2"></h2>
+                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                            <div class="flex items-center space-x-2">
+                                <img id="popupArtistAvatar" src="" alt="Artist" class="w-8 h-8 rounded-full">
+                                <span id="popupArtist"></span>
+                            </div>
+                            <span id="popupTime"></span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="popupBookmarkBtn" onclick="toggleBookmark(event, this, 0)" class="action-button">
+                            <i class="far fa-bookmark"></i>
+                        </button>
+                        <button onclick="openCommentsModal(event, 0)" class="action-button">
+                            <i class="far fa-comment"></i>
+                        </button>
+                        <button class="action-button">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Deskripsi</h3>
+                    <p id="popupDescription" class="text-gray-700 leading-relaxed"></p>
+                </div>
+                
+                <!-- Tags -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Tag</h3>
+                    <div id="popupTags" class="flex flex-wrap gap-2">
+                        <!-- Tags will be inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Stats -->
+                <div class="flex items-center space-x-6 text-sm text-gray-600 border-t pt-4">
+                    <div class="flex items-center space-x-1">
+                        <i class="far fa-heart"></i>
+                        <span id="popupLikes">0</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <i class="far fa-comment"></i>
+                        <span id="popupComments">0</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <i class="far fa-eye"></i>
+                        <span id="popupViews">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 w-full max-w-md border border-gray-200">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">Upload Karya</h2>
+                <button onclick="closeUploadModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="handleUpload(event)">
+                <div class="mb-3">
+                    <div class="border-2 border-dashed border-gray-300 rounded p-6 text-center">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-600">Pilih gambar</p>
+                        <input type="file" class="hidden" accept="image/*">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="Judul">
+                </div>
+                <div class="mb-3">
+                    <textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm" rows="2" placeholder="Deskripsi"></textarea>
+                </div>
+                <button type="submit" class="w-full red-bg text-white py-2 rounded text-sm font-medium">
+                    Upload
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 w-full max-w-md border border-gray-200">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">Edit Profil</h2>
+                <button onclick="closeEditProfileModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="handleEditProfile(event)">
+                <div class="mb-3 text-center">
+                    <img src="https://picsum.photos/seed/user1/80/80" alt="Profile" class="w-20 h-20 rounded-full mx-auto mb-2">
+                    <button type="button" class="text-sm red-text">Ganti Foto</button>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" value="Gyebran Artist">
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" value="gyebran">
+                </div>
+                <div class="mb-3">
+                    <textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm" rows="2">Digital artist</textarea>
+                </div>
+                <button type="submit" class="w-full red-bg text-white py-2 rounded text-sm font-medium">
+                    Simpan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 w-full max-w-md border border-gray-200">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">Laporkan</h2>
+                <button onclick="closeReportModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="handleReport(event)">
+                <div class="mb-3">
+                    <select class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                        <option>Pilih jenis</option>
+                        <option>Spam</option>
+                        <option>Konten tidak pantas</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm" rows="3" placeholder="Deskripsi"></textarea>
+                </div>
+                <button type="submit" class="w-full red-bg text-white py-2 rounded text-sm font-medium">
+                    Kirim
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Comments Modal -->
+    <div id="commentsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 w-full max-w-lg border border-gray-200">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">Komentar</h2>
+                <button onclick="closeCommentsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="mb-3">
+                <img src="https://picsum.photos/seed/art1/400/200" alt="Artwork" class="w-full rounded">
+            </div>
+            
+            <div class="space-y-3 mb-3 max-h-60 overflow-y-auto">
+                <div class="flex space-x-2">
+                    <img src="https://picsum.photos/seed/user2/32/32" alt="User" class="w-8 h-8 rounded-full">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded p-2">
+                            <p class="text-sm font-medium">Altap</p>
+                            <p class="text-sm">Bagus sekali!</p>
+                        </div>
+                        <div class="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                            <span>2 jam</span>
+                            <button class="hover:text-red-600">
+                                <i class="far fa-heart"></i> 5
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <img src="https://picsum.photos/seed/user3/32/32" alt="User" class="w-8 h-8 rounded-full">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded p-2">
+                            <p class="text-sm font-medium">Rara</p>
+                            <p class="text-sm">Suka!</p>
+                        </div>
+                        <div class="flex items-center space-x-3 mt-1 text-xs text-gray-500">
+                            <span>1 jam</span>
+                            <button class="hover:text-red-600">
+                                <i class="far fa-heart"></i> 3
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-2">
+                <img src="https://picsum.photos/seed/user1/32/32" alt="User" class="w-8 h-8 rounded-full">
+                <input type="text" placeholder="Tulis komentar..." class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+                <button class="red-bg text-white px-3 py-2 rounded text-sm">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Artwork data with additional details
+        const artworks = {
+            1: { 
+                title: 'Sunset Dreams', 
+                artist: 'Bagas', 
+                time: '2 jam', 
+                image: 'art1',
+                description: 'Sebuah lukisan digital yang menangkap keindahan matahari terbenam di atas lautan. Warna-warna hangat dan gradasi halus menciptakan suasana yang damai dan menenangkan. Karya ini terinspirasi dari pengalaman pribadi saat menyaksikan sunset di pantai Bali.',
+                tags: ['sunset', 'digital art', 'landscape', 'warm colors'],
+                likes: 156,
+                comments: 23,
+                views: 1240,
+                images: ['art1', 'art1a', 'art1b']
+            },
+            2: { 
+                title: 'Digital Landscape', 
+                artist: 'Altap', 
+                time: '5 jam', 
+                image: 'art2',
+                description: 'Lanskap futuristik yang menggabungkan elemen alam dengan teknologi. Menggunakan teknik digital painting untuk menciptakan dunia imajinatif yang penuh detail dan warna-warna vibrant.',
+                tags: ['futuristic', 'landscape', 'digital painting', 'concept art'],
+                likes: 203,
+                comments: 31,
+                views: 1890,
+                images: ['art2', 'art2a', 'art2b']
+            },
+            3: { 
+                title: 'Abstract Emotions', 
+                artist: 'Gyebran', 
+                time: '1 hari', 
+                image: 'art3',
+                description: 'Ekspresi abstrak dari emosi manusia melalui bentuk dan warna. Setiap brushstroke mewakili perasaan yang berbeda, menciptakan harmoni antara kekacauan dan ketertiban.',
+                tags: ['abstract', 'emotions', 'expressionism', 'contemporary'],
+                likes: 89,
+                comments: 15,
+                views: 756,
+                images: ['art3', 'art3a', 'art3b']
+            },
+            4: { 
+                title: 'Urban Sketches', 
+                artist: 'Rara', 
+                time: '2 hari', 
+                image: 'art4',
+                description: 'Sketsa cepat kehidupan perkotaan yang menangkap esensi sehari-hari. Menggunakan teknik ink dan watercolor untuk menciptakan kesan spontan dan hidup.',
+                tags: ['urban', 'sketch', 'ink', 'watercolor', 'street art'],
+                likes: 134,
+                comments: 28,
+                views: 1123,
+                images: ['art4', 'art4a', 'art4b']
+            },
+            5: { 
+                title: 'Nature\'s Beauty', 
+                artist: 'Vanes', 
+                time: '3 hari', 
+                image: 'art5',
+                description: 'Potret keindahan alam yang masih perawan. Dari pegunungan menjulang tinggi hingga lembah hijau yang memukau, karya ini mengajak kita untuk kembali ke alam.',
+                tags: ['nature', 'landscape', 'photography', 'mountains'],
+                likes: 267,
+                comments: 42,
+                views: 2340,
+                images: ['art5', 'art5a', 'art5b']
+            },
+            6: { 
+                title: 'City Lights', 
+                artist: 'Bagas', 
+                time: '4 hari', 
+                image: 'art6',
+                description: 'Kehidupan malam kota yang tidak pernah tidur. Cahaya-lampu yang berkelap-kelip menciptakan symphony cahaya yang memukau di tengah kegelapan.',
+                tags: ['city', 'night', 'lights', 'urban', 'photography'],
+                likes: 178,
+                comments: 29,
+                views: 1456,
+                images: ['art6', 'art6a', 'art6b']
+            },
+            7: { 
+                title: 'Ocean Waves', 
+                artist: 'Altap', 
+                time: '5 hari', 
+                image: 'art7',
+                description: 'Kekuatan dan keindahan ombak laut yang tak henti. Setiap gelombang menceritakan kisah tentang perjalanan panjang dari samudra yang luas.',
+                tags: ['ocean', 'waves', 'sea', 'nature', 'power'],
+                likes: 145,
+                comments: 26,
+                views: 1289,
+                images: ['art7', 'art7a', 'art7b']
+            },
+            8: { 
+                title: 'Mountain View', 
+                artist: 'Gyebran', 
+                time: '1 minggu', 
+                image: 'art8',
+                description: 'Pemandangan gunung dari ketinggian yang memukau. Kabut pagi yang menyelimuti puncak gunung menciptakan suasana mistis dan damai.',
+                tags: ['mountains', 'view', 'mist', 'morning', 'landscape'],
+                likes: 198,
+                comments: 35,
+                views: 1678,
+                images: ['art8', 'art8a', 'art8b']
+            }
+        };
+
+        // Initialize bookmarks from localStorage
+        let bookmarks = JSON.parse(localStorage.getItem('bookmarks')) || [3, 6]; // Pre-bookmarked items
+        let currentArtworkId = null;
+
+        // Section Navigation
+        function showSection(section) {
+            document.getElementById('gallerySection').classList.add('section-hidden');
+            document.getElementById('commentsSection').classList.add('section-hidden');
+            document.getElementById('bookmarksSection').classList.add('section-hidden');
+            
+            if (section === 'gallery') {
+                document.getElementById('gallerySection').classList.remove('section-hidden');
+            } else if (section === 'comments') {
+                document.getElementById('commentsSection').classList.remove('section-hidden');
+            } else if (section === 'bookmarks') {
+                document.getElementById('bookmarksSection').classList.remove('section-hidden');
+                renderBookmarks();
+            }
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('red-text');
+                link.classList.add('text-gray-600');
+            });
+            event.target.classList.remove('text-gray-600');
+            event.target.classList.add('red-text');
+        }
+
+        // Artwork Popup Functions
+        function openArtworkPopup(artworkId) {
+            currentArtworkId = artworkId;
+            const artwork = artworks[artworkId];
+            
+            if (!artwork) return;
+            
+            // Set main image
+            document.getElementById('popupMainImage').src = `https://picsum.photos/seed/${artwork.images[0]}/600/400`;
+            
+            // Set side images
+            document.getElementById('popupSideImage1').src = `https://picsum.photos/seed/${artwork.images[1]}/300/200`;
+            document.getElementById('popupSideImage2').src = `https://picsum.photos/seed/${artwork.images[2]}/300/200`;
+            
+            // Set artwork info
+            document.getElementById('popupTitle').textContent = artwork.title;
+            document.getElementById('popupArtist').textContent = artwork.artist;
+            document.getElementById('popupArtistAvatar').src = `https://picsum.photos/seed/${artwork.artist}/32/32`;
+            document.getElementById('popupTime').textContent = artwork.time;
+            document.getElementById('popupDescription').textContent = artwork.description;
+            
+            // Set stats
+            document.getElementById('popupLikes').textContent = artwork.likes;
+            document.getElementById('popupComments').textContent = artwork.comments;
+            document.getElementById('popupViews').textContent = artwork.views;
+            
+            // Set tags
+            const tagsContainer = document.getElementById('popupTags');
+            tagsContainer.innerHTML = '';
+            artwork.tags.forEach(tag => {
+                const tagSpan = document.createElement('span');
+                tagSpan.className = 'px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm';
+                tagSpan.textContent = `#${tag}`;
+                tagsContainer.appendChild(tagSpan);
+            });
+            
+            // Set bookmark state
+            const bookmarkBtn = document.getElementById('popupBookmarkBtn');
+            const bookmarkIcon = bookmarkBtn.querySelector('i');
+            if (bookmarks.includes(artworkId)) {
+                bookmarkIcon.classList.remove('far');
+                bookmarkIcon.classList.add('fas');
+                bookmarkBtn.classList.add('bookmarked');
+            } else {
+                bookmarkIcon.classList.remove('fas');
+                bookmarkIcon.classList.add('far');
+                bookmarkBtn.classList.remove('bookmarked');
+            }
+            
+            // Show popup
+            document.getElementById('artworkPopup').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeArtworkPopup() {
+            document.getElementById('artworkPopup').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            currentArtworkId = null;
+        }
+
+        function changeMainImage(src) {
+            document.getElementById('popupMainImage').src = src.replace('/300/200', '/600/400');
+        }
+
+        // Render bookmarks
+        function renderBookmarks() {
+            const container = document.getElementById('bookmarksContainer');
+            const emptyState = document.getElementById('emptyBookmarks');
+            
+            container.innerHTML = '';
+            
+            if (bookmarks.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                bookmarks.forEach(id => {
+                    const artwork = artworks[id];
+                    if (artwork) {
+                        const bookmarkItem = createBookmarkItem(id, artwork);
+                        container.appendChild(bookmarkItem);
+                    }
+                });
+            }
+        }
+
+        // Create bookmark item HTML
+        function createBookmarkItem(id, artwork) {
+            const div = document.createElement('div');
+            div.className = 'masonry-item';
+            div.innerHTML = `
+                <div class="artwork-card bg-white border border-gray-200 rounded overflow-hidden" data-artwork-id="${id}" onclick="openArtworkPopup(${id})">
+                    <div class="relative">
+                        <img src="https://picsum.photos/seed/${artwork.image}/300/400" alt="Artwork" class="w-full">
+                        <div class="artwork-overlay">
+                            <div class="artwork-actions">
+                                <button onclick="toggleBookmark(event, this, ${id})" class="action-button bookmarked">
+                                    <i class="fas fa-bookmark"></i>
+                                </button>
+                                <button onclick="openCommentsModal(event, ${id})" class="action-button">
+                                    <i class="far fa-comment"></i>
+                                </button>
+                                <button class="action-button">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="artwork-info">
+                        <h3 class="font-medium text-sm mb-1">${artwork.title}</h3>
+                        <div class="flex items-center justify-between text-xs text-gray-600">
+                            <span>${artwork.artist}</span>
+                            <span>${artwork.time}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        // Toggle bookmark
+        function toggleBookmark(event, button, artworkId) {
+            event.stopPropagation();
+            
+            const icon = button.querySelector('i');
+            const index = bookmarks.indexOf(artworkId);
+            
+            if (index > -1) {
+                // Remove from bookmarks
+                bookmarks.splice(index, 1);
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                button.classList.remove('bookmarked');
+            } else {
+                // Add to bookmarks
+                bookmarks.push(artworkId);
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                button.classList.add('bookmarked');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+            
+            // Update bookmark button in gallery if exists
+            const galleryButton = document.querySelector(`#gallerySection [data-artwork-id="${artworkId}"] .action-button`);
+            if (galleryButton) {
+                const galleryIcon = galleryButton.querySelector('i');
+                if (index > -1) {
+                    galleryIcon.classList.remove('fas');
+                    galleryIcon.classList.add('far');
+                    galleryButton.classList.remove('bookmarked');
+                } else {
+                    galleryIcon.classList.remove('far');
+                    galleryIcon.classList.add('fas');
+                    galleryButton.classList.add('bookmarked');
+                }
+            }
+            
+            // Update bookmark button in popup if open
+            if (currentArtworkId === artworkId) {
+                const popupBookmarkBtn = document.getElementById('popupBookmarkBtn');
+                const popupIcon = popupBookmarkBtn.querySelector('i');
+                if (index > -1) {
+                    popupIcon.classList.remove('fas');
+                    popupIcon.classList.add('far');
+                    popupBookmarkBtn.classList.remove('bookmarked');
+                } else {
+                    popupIcon.classList.remove('far');
+                    popupIcon.classList.add('fas');
+                    popupBookmarkBtn.classList.add('bookmarked');
+                }
+            }
+        }
+
+        // Clear all bookmarks
+
+
+        // Upload Modal
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+        }
+        function handleUpload(event) {
+            event.preventDefault();
+            alert('Karya berhasil diupload!');
+            closeUploadModal();
+        }
+
+        // Edit Profile Modal
+        function openEditProfileModal() {
+            document.getElementById('editProfileModal').classList.remove('hidden');
+            document.getElementById('profileMenu').classList.add('hidden');
+        }
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.add('hidden');
+        }
+        function handleEditProfile(event) {
+            event.preventDefault();
+            alert('Profil berhasil diperbarui!');
+            closeEditProfileModal();
+        }
+
+        // Report Modal
+        function openReportModal() {
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.getElementById('profileMenu').classList.add('hidden');
+        }
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+        function handleReport(event) {
+            event.preventDefault();
+            alert('Laporan berhasil dikirim!');
+            closeReportModal();
+        }
+
+        // Comments Modal
+        function openCommentsModal(event, artworkId) {
+            if (event) event.stopPropagation();
+            document.getElementById('commentsModal').classList.remove('hidden');
+        }
+        function closeCommentsModal() {
+            document.getElementById('commentsModal').classList.add('hidden');
+        }
+
+        // Profile Menu
+        function toggleProfileMenu() {
+            document.getElementById('profileMenu').classList.toggle('hidden');
+        }
+
+        // Close modals
+        window.onclick = function(event) {
+            if (event.target.classList.contains('bg-black')) {
+                event.target.classList.add('hidden');
+            }
+            if (event.target.id === 'artworkPopup') {
+                closeArtworkPopup();
+            }
+        }
+
+        // Close popup with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeArtworkPopup();
+            }
+        });
+
+        // Initialize bookmark states on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            bookmarks.forEach(id => {
+                const button = document.querySelector(`[data-artwork-id="${id}"] .action-button`);
+                if (button) {
+                    const icon = button.querySelector('i');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    button.classList.add('bookmarked');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
