@@ -9,8 +9,6 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 
-
-
 // Auth routes
 Route::get('/auth', [AuthController::class, 'showAuthForm'])->name('auth.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -19,28 +17,34 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Artwork routes
 Route::get('/', [ArtworkController::class, 'index'])->name('artworks.index');
-Route::get('/artworks/{id}/view', [ArtworkController::class, 'view'])->name('artworks.view');
+
+// ✅ UBAH INI - Untuk HTML view
+Route::get('/artworks/{id}', [ArtworkController::class, 'show'])->name('artworks.show');
+
+// ✅ TAMBAH INI - Untuk API/JSON (optional, kalau masih butuh)
+Route::get('/artworks/{id}/api', [ArtworkController::class, 'view'])->name('artworks.api');
+
 Route::post('/artworks', [ArtworkController::class, 'store'])->name('artworks.store');
 
-//bookmark routes
+Route::get('/artworks/{id}/view', [ArtworkController::class, 'view'])->name('artworks.view');
+
+// Bookmark routes
 Route::get('/bookmarks', [BookmarkController::class, 'index']);
 Route::post('/bookmarks', [BookmarkController::class, 'store']);
 Route::delete('/bookmarks/{artworkId}', [BookmarkController::class, 'destroy']);
 Route::delete('/bookmarks/clear-all', [BookmarkController::class, 'clearAll']);
 
-
 // Comment routes
-Route::get('/comments/{artworkId}', [CommentController::class, 'index'])->name('comments.index');
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
-
+Route::get('/comments/{artworkId}', [CommentController::class, 'getByArtwork'])->name('comments.by-artwork');
 // Like routes
-Route::post('likes', [LikeController::class, 'store'])->name('likes.store');
-Route::delete('likes/{id}', [LikeController::class, 'destroy'])->name('likes.destroy');
+Route::post('/likes', [LikeController::class, 'store'])->name('likes.store');
+Route::delete('/likes/{id}', [LikeController::class, 'destroy'])->name('likes.destroy');
 
-// Menjadi:
-Route::get(
-    '/users/{id}', 
-    [App\Http\Controllers\UserController::class, 'show']
-)->name('users.show');
-Route::put('user', [UserController::class, 'update']);
+// User routes
+Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
+Route::put('/user', [UserController::class, 'update']);
+
+// Report route
+Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'store'])->name('reports.store');

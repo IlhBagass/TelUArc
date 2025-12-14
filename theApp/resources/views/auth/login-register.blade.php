@@ -154,7 +154,7 @@
                                 <label for="avatar-upload" class="bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-100">
                                     <i class="fas fa-camera text-gray-600"></i>
                                 </label>
-                                <input type="file" id="avatar-upload" name="avatar" accept="image/*" />
+                                <input type="file" id="avatar-upload" name="avatar" accept="image/*" required/>
                             </div>
                             <div class="avatar-preview">
                                 <div>

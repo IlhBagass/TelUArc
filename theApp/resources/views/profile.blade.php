@@ -1082,26 +1082,28 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-white">
     <!-- Header - Same as Landing Page -->
-    <header class="header-gradient text-white sticky top-0 z-40">
+    <!-- Header -->
+    <header class="header text-gray-800 sticky top-0 z-40" id="mainHeader">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                        <i class="fas fa-palette text-red-600 text-xl"></i>
-                    </div>
-                    <a href="{{ route('artworks.index') }}" class="text-2xl font-bold">telUArc</a>
+                    <a href="{{ route('artworks.index') }}">
+                        <img src="{{ asset('logo-telu-arc.png') }}" alt="TelUArc Logo" class="h-12 w-auto object-contain">
+                    </a>
                 </div>
                 
                 <!-- Search Bar -->
                 <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Cari karya, seniman, atau tag...">
+                    <form action="{{ route('artworks.index') }}" method="GET" class="w-full">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" placeholder="Cari judul karya..." value="{{ request('search') }}">
+                    </form>
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <button onclick="openUploadModal()" class="bg-white text-red-600 px-4 py-2 rounded-full text-sm font-semibold hover:bg-red-50 transition-colors flex items-center">
+                    <button onclick="openUploadModal()" class="red-bg text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors flex items-center">
                         <i class="fas fa-plus mr-2"></i> Upload Karya
                     </button>
                     
