@@ -50,4 +50,12 @@ class Artwork extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
+
+    /**
+     * Check if the artwork is bookmarked by the current user.
+     */
+    public function getIsBookmarkedAttribute(): bool
+    {
+        return Auth::check() && $this->bookmarks()->where('user_id', Auth::id())->exists();
+    }
 }

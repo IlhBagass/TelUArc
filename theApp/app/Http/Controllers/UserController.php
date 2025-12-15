@@ -17,12 +17,10 @@ class UserController extends Controller
         return view('profile', compact('user', 'artworks'));
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(Request $request)
     {
         if (!Auth::check()) {
-            return response()->json([
-                'error' => 'Silakan login terlebih dahulu untuk update profil.'
-            ], 401);
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu untuk update profil.');
         }
 
         /** @var \App\Models\User $user */
@@ -42,7 +40,7 @@ class UserController extends Controller
         ]);
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar !== 'default.jpg') {
+            if ($user->avatar && $user->avatar !== 'default.jpg') {
                 Storage::disk('public')->delete($user->avatar);
             }
 
@@ -50,7 +48,7 @@ class UserController extends Controller
             $user->update(['avatar' => $avatarPath]);
         }
 
-        return response()->json($user);
+        return redirect()->route('users.show', $user->id)->with('success', 'Profil berhasil diperbarui!');
     }
 
 }

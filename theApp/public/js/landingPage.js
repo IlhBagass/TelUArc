@@ -513,8 +513,10 @@ async function openArtworkPopup(artworkId) {
         }
 
         // Set artwork_id in comment form
-        // Set artwork_id in comment form
-        document.getElementById('commentArtworkId').value = artworkId;
+        const commentArtworkIdInput = document.getElementById('commentArtworkId');
+        if (commentArtworkIdInput) {
+            commentArtworkIdInput.value = artworkId;
+        }
 
         // Show popup
         document.getElementById('artworkPopup').classList.add('active');
@@ -602,6 +604,12 @@ async function toggleBookmark(event, artworkId) {
     }
 
     if (!icon || !button) return;
+
+    // Check Auth
+    if (!checkAuth()) {
+        openAuthCheckModal();
+        return;
+    }
 
     const isBookmarked = icon.classList.contains("fas");
 
@@ -804,6 +812,12 @@ function renderBookmarks() {
 // Modals: Upload, Profile, Report, Comments
 // =======================
 function openUploadModal() {
+    // Check Auth
+    if (!checkAuth()) {
+        openAuthCheckModal();
+        return;
+    }
+
     const modal = document.getElementById('uploadModal');
     const modalContent = document.getElementById('uploadModalContent');
 
@@ -836,6 +850,13 @@ function closeUploadModal() {
 
 function openReportModal(event, artworkId) {
     if (event) event.stopPropagation();
+
+    // Check Auth
+    if (!checkAuth()) {
+        openAuthCheckModal();
+        return;
+    }
+
     if (!artworkId) return;
 
     // Hide profile menu if open
@@ -938,3 +959,34 @@ document.addEventListener('keydown', function (event) {
         closeArtworkPopup();
     }
 });
+
+// =======================
+// Auth Check Helper
+// =======================
+function checkAuth() {
+    return window.currentUserId && window.currentUserId !== "";
+}
+
+function openAuthCheckModal() {
+    const modal = document.getElementById('authCheckModal');
+    const modalContent = document.getElementById('authCheckModalContent');
+
+    modal.classList.remove('hidden');
+    // Force reflow
+    void modal.offsetWidth;
+
+    modalContent.classList.remove('scale-95', 'opacity-0');
+    modalContent.classList.add('scale-100', 'opacity-100');
+}
+
+function closeAuthCheckModal() {
+    const modal = document.getElementById('authCheckModal');
+    const modalContent = document.getElementById('authCheckModalContent');
+
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}

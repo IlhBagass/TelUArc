@@ -23,8 +23,10 @@ class CommentController extends Controller
                     'id' => $comment->id,
                     'content' => $comment->content,
                     'created_at' => $comment->created_at->toISOString(),
-                    'user_name' => $comment->user->name,
-                    'user_avatar' => $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : null,
+                    'user_name' => optional($comment->user)->name ?? 'Anonim',
+                    'user_avatar' => optional($comment->user)->avatar 
+                        ? asset('storage/' . $comment->user->avatar) 
+                        : null,
                     'user_id' => $comment->user_id, // Add user_id for ownership check
                 ];
             });

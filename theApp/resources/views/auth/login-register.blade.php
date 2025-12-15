@@ -59,12 +59,13 @@
         }
         .avatar-placeholder { color: #9CA3AF; font-size: 2rem; }
     </style>
+    <link rel="icon" href="{{ asset('logo-telkom.png') }}" type="image/png">
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
 
 <div class="max-w-md w-full">
     <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold red-text mb-2">telUArc</h1>
+        <img src="{{ asset('logo-telu-arc.png') }}" alt="telUArc Logo" class="h-20 mx-auto mb-4 object-contain">
         <p class="text-gray-600">Platform untuk berbagi karya seni digital</p>
     </div>
 
@@ -128,6 +129,15 @@
                         </span>
                         Masuk
                     </button>
+                </div>
+
+                <div class="mt-3">
+                    <a href="/" class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-center block transition-colors">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i class="fas fa-arrow-right h-5 w-5 text-gray-400 group-hover:text-gray-500"></i>
+                        </span>
+                        Masuk Tanpa Login
+                    </a>
                 </div>
 
                 {{-- Error login server-side --}}
@@ -255,6 +265,15 @@
                     </button>
                 </div>
 
+                <div class="mt-3">
+                    <a href="/" class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-center block transition-colors">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i class="fas fa-arrow-right h-5 w-5 text-gray-400 group-hover:text-gray-500"></i>
+                        </span>
+                        Masuk Tanpa Login
+                    </a>
+                </div>
+
                 {{-- Error server-side --}}
                 @if($errors->any())
                     <div class="mt-4 text-red-600 text-sm">
@@ -319,6 +338,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+</script>
+<script>
+    // ================= TABS LOGIC FROM URL =================
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        
+        if (tab === 'register') {
+            document.getElementById('register-tab').checked = true;
+        } else if (tab === 'login') {
+            document.getElementById('login-tab').checked = true;
+        }
+    });
 </script>
 
 </body>

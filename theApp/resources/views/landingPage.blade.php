@@ -16,748 +16,19 @@
         window.currentUserId = "{{ Auth::id() }}";
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="{{ asset('logo-telkom.png') }}" type="image/png">
     <link rel="stylesheet" href="{{ asset('css/landingPage.css') }}">
-    <style>
-        :root {
-            --primary-red: #e53e3e;
-            --primary-red-dark: #c53030;
-            --primary-red-light: #feb2b2;
-        }
-
-        body {
-            background-color: #ffffff;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        /* Header Styles */
-        .header {
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .header.scrolled {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .red-text {
-            color: var(--primary-red);
-            font-weight: 800;
-        }
-
-        .red-bg {
-            background-color: var(--primary-red);
-            transition: all 0.3s ease;
-        }
-
-        .red-bg:hover {
-            background-color: var(--primary-red-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(229, 62, 62, 0.3);
-        }
-
-        /* Gallery Styles */
-        .masonry-grid {
-            column-count: 4;
-            column-gap: 1.5rem;
-        }
-
-        @media (max-width: 1024px) {
-            .masonry-grid {
-                column-count: 3;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .masonry-grid {
-                column-count: 2;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .masonry-grid {
-                column-count: 1;
-            }
-        }
-
-        .masonry-item {
-            break-inside: avoid;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .artwork-card {
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            background: white;
-            border: 1px solid #f0f0f0;
-        }
-
-        .artwork-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .artwork-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 60%);
-            display: flex;
-            align-items: flex-end;
-            padding: 15px;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .artwork-card:hover .artwork-overlay {
-            opacity: 1;
-        }
-
-        .artwork-actions {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .action-button {
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .action-button:hover {
-            background: white;
-            transform: scale(1.1);
-            color: var(--primary-red);
-        }
-
-        .bookmarked i {
-            color: var(--primary-red);
-        }
-
-        /* Artwork Popup Styles */
-        .artwork-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .artwork-popup.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .popup-content {
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: scale(0.9);
-            transition: all 0.3s ease;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .artwork-popup.active .popup-content {
-            transform: scale(1);
-        }
-
-        /* Image Container Styles */
-        .image-gallery {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .main-image-container {
-            position: relative;
-            width: 100%;
-            max-height: 500px;
-            overflow: hidden;
-            border-radius: 16px;
-            background: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .main-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            max-height: 500px;
-            transition: all 0.3s ease;
-        }
-
-        /* Thumbnail Grid */
-        .thumbnail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 0.75rem;
-            max-height: 120px;
-            overflow-y: auto;
-            padding: 0.5rem;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-
-        .thumbnail {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .thumbnail:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .thumbnail.active {
-            border-color: var(--primary-red);
-            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
-        }
-
-        /* Comments Section Styles */
-        .comments-section {
-            margin-top: 2rem;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 1.5rem;
-        }
-
-        .comment-form {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 1.5rem;
-        }
-
-        .comment-user {
-            margin-bottom: 0.5rem;
-        }
-
-        .comment-input {
-            border: 2px solid #e5e7eb;
-            border-radius: 50px;
-            padding: 10px 20px;
-            transition: all 0.2s ease;
-        }
-
-        .comment-input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
-        }
-
-        .comment-submit {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-left: 10px;
-        }
-
-        .comment-submit:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
-        }
-
-        .comments-container {
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 0.5rem;
-        }
-
-        .comments-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .comments-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .comments-container::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 10px;
-        }
-
-        .comment-item {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .comment-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .comment-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .comment-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 12px;
-            object-fit: cover;
-        }
-
-        .comment-meta {
-            flex-grow: 1;
-        }
-
-        .comment-author {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.95rem;
-        }
-
-        .comment-time {
-            font-size: 0.75rem;
-            color: #888;
-        }
-
-        .comment-body {
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-left: 52px;
-            position: relative;
-        }
-
-        .comment-body:before {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: -8px;
-            width: 16px;
-            height: 16px;
-            background-color: #f8f9fa;
-            transform: rotate(45deg);
-            border-radius: 4px;
-        }
-
-        .comment-text {
-            color: #444;
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        .no-comments-message {
-            text-align: center;
-            padding: 2rem;
-            color: #6b7280;
-            background: #f9fafb;
-            border-radius: 12px;
-        }
-
-        /* Responsive Image Container */
-        @media (max-width: 768px) {
-            .main-image-container {
-                max-height: 350px;
-            }
-
-            .main-image {
-                max-height: 350px;
-            }
-
-            .thumbnail-grid {
-                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            }
-
-            .thumbnail {
-                height: 60px;
-            }
-        }
-
-        /* Modal Styles */
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            transform: translateY(30px);
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .modal-active .modal-content {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        /* Button Styles */
-        .btn-primary {
-            background-color: var(--primary-red);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(229, 62, 62, 0.4);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--primary-red);
-            border: 2px solid var(--primary-red);
-            padding: 10px 22px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline:hover {
-            background-color: var(--primary-red);
-            color: white;
-        }
-
-        .btn-outline-white {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-            padding: 10px 22px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline-white:hover {
-            background-color: white;
-            color: var(--primary-red);
-        }
-
-        /* Input Styles */
-        .form-input {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px 16px;
-            transition: all 0.2s ease;
-            background: #f8fafc;
-        }
-
-        .form-input:focus {
-            border-color: var(--primary-red);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
-        }
-
-        /* Search Bar Styles */
-        .search-bar {
-            position: relative;
-            flex-grow: 1;
-            max-width: 600px;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 10px 20px 10px 45px;
-            border-radius: 50px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            color: #333;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .search-bar input::placeholder {
-            color: #a0aec0;
-        }
-
-        .search-bar input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0aec0;
-        }
-
-        /* Tag Styles */
-        .tag {
-            background-color: #fef2f2;
-            color: var(--primary-red);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            border: 1px solid #fecaca;
-        }
-
-        .tag:hover {
-            background-color: #fee2e2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(254, 202, 202, 0.4);
-        }
-
-        /* Profile Menu */
-        .profile-menu {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            transform-origin: top right;
-            transition: all 0.2s ease;
-            border: 1px solid #e2e8f0;
-        }
-
-        .profile-menu a {
-            padding: 12px 16px;
-            transition: all 0.2s ease;
-        }
-
-        .profile-menu a:hover {
-            background: #f8fafc;
-            color: var(--primary-red);
-        }
-
-        /* Floating Action Button */
-        .fab {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: var(--primary-red);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 25px rgba(229, 62, 62, 0.4);
-            z-index: 50;
-            transition: all 0.3s ease;
-        }
-
-        .fab:hover {
-            transform: scale(1.1) rotate(15deg);
-            box-shadow: 0 15px 35px rgba(229, 62, 62, 0.5);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f0f0f0;
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            color: #cbd5e0;
-            margin-bottom: 20px;
-        }
-
-        /* Notification Badge */
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            width: 20px;
-            height: 20px;
-            background: var(--primary-red);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in {
-            animation: fadeInUp 1s ease forwards;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0;
-        }
-
-        .popup-content::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .popup-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .popup-content::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 10px;
-        }
-
-        .popup-content::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0;
-        }
-
-        .thumbnail-grid::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .thumbnail-grid::-webkit-scrollbar-track {
-            background: #e2e8f0;
-            border-radius: 3px;
-        }
-
-        .thumbnail-grid::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 3px;
-        }
-
-        /* Video Background Styles */
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        #bgVideo {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            transform: translateX(-50%) translateY(-50%);
-            z-index: 0;
-        }
-
-        /* Responsive adjustments untuk video */
-        @media (max-width: 768px) {
-            .video-container {
-                height: 70vh;
-            }
-
-            #bgVideo {
-                width: 100vw;
-                height: 56.25vw;
-                /* 16:9 Aspect Ratio */
-                min-height: 100vh;
-                min-width: 177.77vh;
-                /* 16:9 Aspect Ratio */
-            }
-        }
-    </style>
 </head>
 <body class="bg-white">
-    <!-- Header -->
-
     <!-- Header -->
     <header class="header text-gray-800 sticky top-0 z-40" id="mainHeader">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-2">
                     <a href="{{ route('artworks.index') }}">
-                        <img src="{{ asset('logo-telu-arc.png') }}" alt="TelUArc Logo" class="h-12 w-auto object-contain">
+                        <img src="{{ asset('logo-telu-arc.png') }}" alt="TelUArc Logo" class="h-12 w-auto object-contain rounded-xl">
                     </a>
                 </div>
                 
@@ -909,7 +180,7 @@
                                 <h3 class="font-bold text-lg mb-1">{{ $artwork->title }}</h3>
                                 <div class="flex items-center justify-between text-sm text-gray-600">
                                     <div class="flex items-center">
-                                        <img src="{{ asset('storage/'.$artwork->user->avatar) }}" alt="Artist" class="w-6 h-6 rounded-full mr-2">
+                                        <img src="{{ $artwork->user && $artwork->user->avatar ? asset('storage/'.$artwork->user->avatar) : 'https://i.pravatar.cc/100' }}" alt="Artist" class="w-6 h-6 rounded-full mr-2">
                                         <span>{{ $artwork->user->name ?? 'Anonim' }}</span>
                                     </div>
                                     <span>{{ $artwork->created_at->diffForHumans() }}</span>
@@ -1021,38 +292,42 @@
                     </h3>
                     
                     <!-- Comment Form -->
-                    <form class="comment-form" action="{{ route('comments.store') }}" method="POST" onsubmit="addComment(event)">
-                        @csrf
-
-                        <div class="comment-user flex items-center space-x-2">
-                            @auth
+                    @auth
+                        <form class="comment-form" action="{{ route('comments.store') }}" method="POST" onsubmit="addComment(event)">
+                            @csrf
+    
+                            <div class="comment-user flex items-center space-x-2">
                                 <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : 'https://i.pravatar.cc/100' }}" 
                                     alt="Profile" class="w-10 h-10 rounded-full object-cover">
-                            @else
-                                <img src="https://i.pravatar.cc/100" 
-                                    alt="Profile" class="w-10 h-10 rounded-full object-cover">
-                            @endauth
-                        </div>
-
-                        @auth
+                            </div>
+    
                             <input type="hidden" name="user_id" value="{{ Auth::id() }}">
-                        @endauth
-                        <input type="hidden" name="artwork_id" id="commentArtworkId" value="">
-
-                        <div class="flex items-center space-x-2 mt-2">
-                            <input 
-                                type="text" 
-                                name="content" 
-                                id="commentInput"
-                                class="comment-input flex-grow border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" 
-                                placeholder="Tulis komentar..." 
-                                required>
-                            
-                            <button type="submit" class="comment-submit bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
+                            <input type="hidden" name="artwork_id" id="commentArtworkId" value="">
+    
+                            <div class="flex items-center space-x-2 mt-2">
+                                <input 
+                                    type="text" 
+                                    name="content" 
+                                    id="commentInput"
+                                    class="comment-input flex-grow border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" 
+                                    placeholder="Tulis komentar..." 
+                                    required>
+                                
+                                <button type="submit" class="comment-submit bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    @else
+                        <div class="bg-red-50 rounded-xl p-6 text-center border border-red-100 my-4">
+                            <i class="fas fa-lock text-3xl text-red-300 mb-3 block"></i>
+                            <h4 class="text-gray-800 font-semibold mb-2">Login untuk Berkomentar</h4>
+                            <p class="text-gray-600 mb-4 text-sm">Silakan login terlebih dahulu untuk ikut berdiskusi dan memberikan komentar pada karya ini.</p>
+                            <a href="{{ route('auth.form') }}" class="inline-flex items-center justify-center bg-red-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-red-700 transition-colors shadow-sm hover:shadow-md">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Masuk Akun
+                            </a>
                         </div>
-                    </form>
+                    @endauth
 
                     
                     <!-- Comments Container -->
@@ -1061,10 +336,10 @@
                             @foreach($artwork->comments as $comment)
                                 <div class="comment-item">
                                     <div class="comment-header">
-                                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : 'https://i.pravatar.cc/100' }}" 
-                                             alt="{{ $comment->user->name }}" class="comment-avatar">
+                                        <img src="{{ optional($comment->user)->avatar ? asset('storage/' . $comment->user->avatar) : 'https://i.pravatar.cc/100' }}" 
+                                             alt="{{ optional($comment->user)->name ?? 'Anonim' }}" class="comment-avatar">
                                         <div class="comment-meta">
-                                            <div class="comment-author">{{ $comment->user->name }}</div>
+                                            <div class="comment-author">{{ optional($comment->user)->name ?? 'Anonim' }}</div>
                                             <div class="comment-time">{{ $comment->created_at->diffForHumans() }}</div>
                                         </div>
                                     </div>
@@ -1250,6 +525,35 @@
         </div>
     </div>
 
+    <!-- Auth Check Modal -->
+    <div id="authCheckModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border-0 overflow-hidden transform transition-all duration-300 scale-95 opacity-0 flex flex-col modal-content" id="authCheckModalContent">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-lock text-3xl text-red-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Akses Terbatas</h3>
+                <p class="text-gray-600 mb-6">Fitur ini hanya tersedia untuk pengguna yang sudah login.</p>
+                
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <p class="text-sm font-medium text-gray-800 mb-3">Apakah Anda sudah memiliki akun?</p>
+                    <div class="flex gap-3">
+                        <a href="{{ route('auth.form') }}" class="flex-1 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition-colors shadow-sm">
+                            Sudah
+                        </a>
+                        <a href="{{ route('auth.form', ['tab' => 'register']) }}" class="flex-1 bg-white text-gray-700 border border-gray-300 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Belum
+                        </a>
+                    </div>
+                </div>
+                
+                <button onclick="closeAuthCheckModal()" class="text-gray-400 hover:text-gray-600 text-sm">
+                    Batal, kembali melihat karya
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-900 text-white pt-16 pb-8">
         <div class="max-w-6xl mx-auto px-4">
@@ -1257,7 +561,7 @@
                 <!-- Logo dan Deskripsi -->
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center space-x-2 mb-4">
-                        <img src="{{ asset('logo-telu-arc.png') }}" alt="TelUArc Logo" class="h-12 w-auto object-contain">
+                        <img src="{{ asset('logo-telu-arc.png') }}" alt="TelUArc Logo" class="h-12 w-auto object-contain rounded-xl">
                     </div>
                     <p class="text-gray-400 mb-6 max-w-md">
                         Platform untuk menjelajahi dan berbagi karya seni digital dari seniman berbakat di seluruh dunia.

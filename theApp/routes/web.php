@@ -27,6 +27,8 @@ Route::get('/artworks/{id}/api', [ArtworkController::class, 'view'])->name('artw
 Route::post('/artworks', [ArtworkController::class, 'store'])->name('artworks.store');
 
 Route::get('/artworks/{id}/view', [ArtworkController::class, 'view'])->name('artworks.view');
+Route::put('/artworks/{id}', [ArtworkController::class, 'update'])->name('artworks.update');
+Route::delete('/artworks/{id}', [ArtworkController::class, 'destroy'])->name('artworks.destroy');
 
 // Bookmark routes
 Route::get('/bookmarks', [BookmarkController::class, 'index']);
@@ -44,7 +46,7 @@ Route::delete('/likes/{id}', [LikeController::class, 'destroy'])->name('likes.de
 
 // User routes
 Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
-Route::put('/user', [UserController::class, 'update']);
+Route::put('/profile', [UserController::class, 'update'])->name('profile.update');
 
 // Report route
 Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'store'])->name('reports.store');

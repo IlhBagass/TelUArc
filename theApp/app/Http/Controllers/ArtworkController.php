@@ -67,10 +67,85 @@ class ArtworkController extends Controller
             'additional_images' => $additionalPaths,
         ]);
 
-        // redirect sukses
+    // redirect sukses
         return redirect()
             ->route('artworks.index')
             ->with('success', 'Karya berhasil diupload!');
+    }
+
+    // Update karya
+    public function update(Request $request, $id)
+    {
+        $artwork = Artwork::findOrFail($id);
+
+        // Authorization check
+        if (Auth::id() !== $artwork->user_id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengedit karya ini.');
+        }
+
+        // Validation
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'main_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Update basic info
+        $artwork->title = $validated['title'];
+        $artwork->description = $validated['description'] ?? null;
+
+        // Handle Main Image Update
+        if ($request->hasFile('main_image')) {
+            // Delete old image if exists
+            if ($artwork->main_image && \Illuminate\Support\Facades\Storage::disk('public')->exists($artwork->main_image)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($artwork->main_image);
+            }
+            $artwork->main_image = $request->file('main_image')->store('artworks', 'public');
+        }
+
+        $artwork->save();
+
+        return redirect()->back()->with('success', 'Karya berhasil diperbarui!');
+    }
+
+    // Hapus karya
+    public function destroy($id)
+    {
+        $artwork = Artwork::findOrFail($id);
+
+        // Authorization check
+        if (Auth::id() !== $artwork->user_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Delete Main Image
+        if ($artwork->main_image && \Illuminate\Support\Facades\Storage::disk('public')->exists($artwork->main_image)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($artwork->main_image);
+        }
+
+        // Delete Additional Images
+        if ($artwork->additional_images) {
+            $images = is_array($artwork->additional_images) 
+                ? $artwork->additional_images 
+                : json_decode($artwork->additional_images, true);
+            
+            if (is_array($images)) {
+                foreach ($images as $image) {
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($image)) {
+                         \Illuminate\Support\Facades\Storage::disk('public')->delete($image);
+                    }
+                }
+            }
+        }
+
+        // Delete Database Record
+        $artwork->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Karya berhasil dihapus']);
+        }
+
+        return redirect()->route('profile')->with('success', 'Karya berhasil dihapus!');
     }
 
     public function show($id)
@@ -106,9 +181,11 @@ class ArtworkController extends Controller
             'created_at' => $artwork->created_at->diffForHumans(),
             'views' => $artwork->views,
             'user' => [
-                'id' => $artwork->user->id ?? null,
-                'name' => $artwork->user->name ?? 'Anonim',
-                'avatar' => $artwork->user->avatar ? asset('storage/' . $artwork->user->avatar) : 'https://i.pravatar.cc/100'
+                'id' => optional($artwork->user)->id,
+                'name' => optional($artwork->user)->name ?? 'Anonim',
+                'avatar' => optional($artwork->user)->avatar 
+                    ? asset('storage/' . $artwork->user->avatar) 
+                    : 'https://i.pravatar.cc/100'
             ],
             'tags' => $artwork->tags->pluck('name')->toArray(),
             'likes' => $artwork->likes()->count(),
@@ -119,9 +196,9 @@ class ArtworkController extends Controller
                     'content' => $comment->content,
                     'created_at' => $comment->created_at->diffForHumans(),
                     'user' => [
-                        'id' => $comment->user->id,
-                        'name' => $comment->user->name,
-                        'avatar' => $comment->user->avatar 
+                        'id' => optional($comment->user)->id,
+                        'name' => optional($comment->user)->name ?? 'Anonim',
+                        'avatar' => optional($comment->user)->avatar 
                             ? asset('storage/' . $comment->user->avatar) 
                             : 'https://i.pravatar.cc/100'
                     ]
