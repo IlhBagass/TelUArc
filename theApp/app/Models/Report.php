@@ -14,15 +14,16 @@ class Report extends Model
         'artwork_id',
         'reason',
         'description',
+        'status',
     ];
 
     public function user()
     {
-        return $table->belongsTo(User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function artwork()
     {
-        return $table->belongsTo(Artwork::class);
+        return $this->belongsTo(Artwork::class);
     }
 }

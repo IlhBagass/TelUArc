@@ -19,7 +19,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'bio',
         'avatar',
+        'role',
     ];
+
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
 
     protected $hidden = [
         'password',

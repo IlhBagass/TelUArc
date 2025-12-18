@@ -25,6 +25,12 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->has('remember-me'))) {
             $request->session()->regenerate();
+            
+            // Redirect based on role
+            if (auth()->user()->isAdmin()) {
+                return redirect()->route('dashboard.index');
+            }
+
             return redirect('/'); // Redirect ke landing page
         }
 

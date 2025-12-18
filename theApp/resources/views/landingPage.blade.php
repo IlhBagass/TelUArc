@@ -60,21 +60,22 @@
                                 @endif
                             </button>
 
-                            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-48 profile-menu py-2">
-                                <a href="{{ route('users.show', auth()->user()->id) }}" class="block px-4 py-2 text-sm hover:bg-gray-50 text-black">
-                                    <i class="fas fa-user mr-2"></i> My Profile
+                            <div id="profileMenu" class="hidden absolute right-0 mt-4 w-56 bg-white rounded-xl shadow-2xl py-2 border border-gray-100 transform transition-all duration-200 origin-top-right z-50">
+                                <div class="px-4 py-3 border-b border-gray-100 mb-2">
+                                    <p class="text-sm font-semibold text-gray-800">{{ Auth::user()->name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                                </div>
+                                
+                                <a href="{{ route('users.show', auth()->user()->id) }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-500 transition-colors flex items-center">
+                                    <i class="fas fa-user w-6 text-center mr-2"></i> Profil Saya
                                 </a>
 
-                                <a href="#" onclick="openReportModal()" class="block px-4 py-2 text-sm hover:bg-gray-50 text-black">
-                                    <i class="fas fa-flag mr-2"></i> Report
-                                </a>
-
-                                <hr class="my-1">
+                                <div class="my-1 border-t border-gray-100"></div>
 
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="block px-4 py-2 text-sm hover:bg-gray-50 text-black">
-                                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                    <button type="submit" class="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center">
+                                        <i class="fas fa-sign-out-alt w-6 text-center mr-2"></i> Keluar
                                     </button>
                                 </form>
                             </div>

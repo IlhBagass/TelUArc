@@ -50,3 +50,14 @@ Route::put('/profile', [UserController::class, 'update'])->name('profile.update'
 
 // Report route
 Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'store'])->name('reports.store');
+
+// Admin Dashboard Routes
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard.index');
+    
+    // Actions
+    Route::delete('/dashboard/artworks/{id}', [\App\Http\Controllers\DashboardController::class, 'destroyArtwork'])->name('dashboard.artworks.destroy');
+    Route::delete('/dashboard/users/{id}', [\App\Http\Controllers\DashboardController::class, 'destroyUser'])->name('dashboard.users.destroy');
+    Route::post('/dashboard/users/{id}/toggle-ban', [\App\Http\Controllers\DashboardController::class, 'toggleUserBan'])->name('dashboard.users.toggle-ban');
+    Route::delete('/dashboard/reports/{id}', [\App\Http\Controllers\DashboardController::class, 'deleteReport'])->name('dashboard.reports.destroy');
+});
